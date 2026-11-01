@@ -21,9 +21,15 @@ spring:
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/shop/protocol/openid-connect/certs}
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/shop}
   cloud:
+    circuitbreaker:
+      resilience4j:
+        disable-time-limiter: true
     openfeign:
       circuitbreaker:
         enabled: true
+      httpclient:
+        hc5:
+          enabled: true
       client:
         config:
           product-service:
@@ -51,6 +57,8 @@ resilience4j:
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10s
         permitted-number-of-calls-in-half-open-state: 3
+        ignore-exceptions:
+          - feign.FeignException$FeignClientException
 
 management:
   endpoints:
