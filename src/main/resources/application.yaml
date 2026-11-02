@@ -1,3 +1,71 @@
+server:
+  port: 8080
+
 spring:
   application:
-    name: shop-user-interaction-service
+    name: user-interaction-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/user_interaction_db}
+    username: ${DB_USER:shop}
+    password: ${DB_PASSWORD:shop}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/shop/protocol/openid-connect/certs}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/shop}
+  cloud:
+    circuitbreaker:
+      resilience4j:
+        disable-time-limiter: true
+    openfeign:
+      circuitbreaker:
+        enabled: true
+      httpclient:
+        hc5:
+          enabled: true
+      client:
+        config:
+          product-service:
+            url: ${PRODUCT_SERVICE_URL:http://localhost:8081}
+            connect-timeout: 2000
+            read-timeout: 5000
+            logger-level: basic
+          cart-service:
+            url: ${CART_SERVICE_URL:http://localhost:8082}
+            connect-timeout: 2000
+            read-timeout: 5000
+            logger-level: basic
+          order-service:
+            url: ${ORDER_SERVICE_URL:http://localhost:8083}
+            connect-timeout: 2000
+            read-timeout: 5000
+            logger-level: basic
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        ignore-exceptions:
+          - feign.FeignException$FeignClientException
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
