@@ -30,4 +30,10 @@ public class CheckoutDraft {
 
     @UpdateTimestamp
     private Instant updatedAt;
+
+    public CheckoutDraft(UUID userId, CheckoutData data) {
+        this.userId = userId;
+        this.data = data;
+    }
 }
+
