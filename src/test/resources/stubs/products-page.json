@@ -1,0 +1,15 @@
+{
+  "content": [
+    {
+      "id": "11111111-0000-0000-0000-000000000001",
+      "name": "Laptop Pro 15",
+      "type": "COMPUTER",
+      "price": { "amount": 3999.00, "currency": "PLN", "vatRate": "VAT_23" }
+    }
+  ],
+  "number": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
+}
+

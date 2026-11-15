@@ -1,0 +1,29 @@
+{
+  "id": "bbbbbbbb-0000-0000-0000-000000000001",
+  "orderNumber": "ORD-2026-0001",
+  "userId": "aaaaaaaa-0000-0000-0000-000000000001",
+  "status": "NEW",
+  "deliveryMethod": "COURIER",
+  "paymentMethod": "CARD",
+  "customer": {
+    "firstName": "Jan",
+    "lastName": "Kowalski",
+    "email": "jan@example.com",
+    "phone": "+48123456789"
+  },
+  "shippingAddress": {
+    "street": "Marszalkowska 1",
+    "city": "Warszawa",
+    "postalCode": "00-001",
+    "country": "PL"
+  },
+  "billingAddress": null,
+  "items": [],
+  "itemsTotal": 3999.00,
+  "deliveryCost": 15.00,
+  "grandTotal": 4014.00,
+  "currency": "PLN",
+  "invoice": null,
+  "createdAt": "2026-11-01T20:00:00Z"
+}
+

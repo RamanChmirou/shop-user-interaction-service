@@ -1,0 +1,10 @@
+{
+  "id": "11111111-0000-0000-0000-000000000001",
+  "name": "Laptop Pro 15",
+  "description": "High performance laptop",
+  "type": "COMPUTER",
+  "price": { "amount": 3999.00, "currency": "PLN", "vatRate": "VAT_23" },
+  "attributes": { "screen": "15.6 inch" },
+  "active": true
+}
+

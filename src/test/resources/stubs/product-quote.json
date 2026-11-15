@@ -1,0 +1,6 @@
+{
+  "productId": "11111111-0000-0000-0000-000000000001",
+  "productName": "Laptop Pro 15",
+  "unitPrice": { "amount": 4399.00, "currency": "PLN", "vatRate": "VAT_23" },
+  "selectedOptions": []
+}
