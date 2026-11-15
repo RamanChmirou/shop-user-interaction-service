@@ -13,6 +13,7 @@ import com.kanapa4.shop.userinteraction.dto.OrderSummaryResponse;
 import com.kanapa4.shop.userinteraction.exception.DownstreamServiceUnavailableException;
 import com.kanapa4.shop.userinteraction.model.DeliveryMethod;
 import com.kanapa4.shop.userinteraction.model.PaymentMethod;
+import com.kanapa4.shop.userinteraction.util.TestFileUtils;
 import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -67,36 +68,8 @@ class OrderServiceClientTest {
     private static final UUID USER_ID = UUID.fromString("aaaaaaaa-0000-0000-0000-000000000001");
     private static final UUID ORDER_ID = UUID.fromString("bbbbbbbb-0000-0000-0000-000000000001");
 
-    private static final String ORDER_JSON = """
-            {
-              "id": "bbbbbbbb-0000-0000-0000-000000000001",
-              "orderNumber": "ORD-2026-0001",
-              "userId": "aaaaaaaa-0000-0000-0000-000000000001",
-              "status": "NEW",
-              "deliveryMethod": "COURIER",
-              "paymentMethod": "CARD",
-              "customer": {
-                "firstName": "Jan",
-                "lastName": "Kowalski",
-                "email": "jan@example.com",
-                "phone": "+48123456789"
-              },
-              "shippingAddress": {
-                "street": "Marszalkowska 1",
-                "city": "Warszawa",
-                "postalCode": "00-001",
-                "country": "PL"
-              },
-              "billingAddress": null,
-              "items": [],
-              "itemsTotal": 3999.00,
-              "deliveryCost": 15.00,
-              "grandTotal": 4014.00,
-              "currency": "PLN",
-              "invoice": null,
-              "createdAt": "2026-11-01T20:00:00Z"
-            }
-            """;
+    private final String orderJson = TestFileUtils.readJson("stubs/order.json");
+    private final String ordersPageJson = TestFileUtils.readJson("stubs/orders-page.json");
 
     @InjectWireMock
     private WireMockServer wireMock;
@@ -113,7 +86,7 @@ class OrderServiceClientTest {
     @DisplayName("checkout: 200 response places order")
     void checkout_Success() {
         wireMock.stubFor(post(urlPathEqualTo("/orders/" + USER_ID))
-                .willReturn(okJson(ORDER_JSON)));
+                .willReturn(okJson(orderJson)));
 
         OrderCheckoutRequest request = new OrderCheckoutRequest(
                 new CustomerDto("Jan", "Kowalski", "jan@example.com", "+48123456789"),
@@ -134,27 +107,8 @@ class OrderServiceClientTest {
     @Test
     @DisplayName("getOrders: 200 response returns paged orders")
     void getOrders_Success() {
-        String pageJson = """
-                {
-                  "content": [
-                    {
-                      "id": "bbbbbbbb-0000-0000-0000-000000000001",
-                      "orderNumber": "ORD-2026-0001",
-                      "status": "NEW",
-                      "grandTotal": 4014.00,
-                      "currency": "PLN",
-                      "createdAt": "2026-11-01T20:00:00Z"
-                    }
-                  ],
-                  "page": 0,
-                  "size": 20,
-                  "totalElements": 1,
-                  "totalPages": 1
-                }
-                """;
-
         wireMock.stubFor(get(urlPathEqualTo("/orders/" + USER_ID))
-                .willReturn(okJson(pageJson)));
+                .willReturn(okJson(ordersPageJson)));
 
         OrderPageResponse<OrderSummaryResponse> response = orderServiceClient.getOrders(USER_ID, 0, 20, "createdAt", "DESC");
 
@@ -166,7 +120,7 @@ class OrderServiceClientTest {
     @DisplayName("getOrder: 200 response returns single order details")
     void getOrder_Success() {
         wireMock.stubFor(get(urlPathEqualTo("/orders/" + USER_ID + "/" + ORDER_ID))
-                .willReturn(okJson(ORDER_JSON)));
+                .willReturn(okJson(orderJson)));
 
         OrderResponse response = orderServiceClient.getOrder(USER_ID, ORDER_ID);
 
@@ -177,7 +131,7 @@ class OrderServiceClientTest {
     @Test
     @DisplayName("pay: 200 response pays order")
     void pay_Success() {
-        String paidJson = ORDER_JSON.replace("\"NEW\"", "\"PAID\"");
+        String paidJson = orderJson.replace("\"NEW\"", "\"PAID\"");
         wireMock.stubFor(post(urlPathEqualTo("/orders/" + USER_ID + "/" + ORDER_ID + "/pay"))
                 .willReturn(okJson(paidJson)));
 
@@ -189,7 +143,7 @@ class OrderServiceClientTest {
     @Test
     @DisplayName("cancel: 200 response cancels order")
     void cancel_Success() {
-        String cancelledJson = ORDER_JSON.replace("\"NEW\"", "\"CANCELLED\"");
+        String cancelledJson = orderJson.replace("\"NEW\"", "\"CANCELLED\"");
         wireMock.stubFor(post(urlPathEqualTo("/orders/" + USER_ID + "/" + ORDER_ID + "/cancel"))
                 .willReturn(okJson(cancelledJson)));
 
@@ -202,7 +156,7 @@ class OrderServiceClientTest {
     @DisplayName("retryInvoice: 200 response retries invoice creation")
     void retryInvoice_Success() {
         wireMock.stubFor(post(urlPathEqualTo("/orders/" + USER_ID + "/" + ORDER_ID + "/invoice"))
-                .willReturn(okJson(ORDER_JSON)));
+                .willReturn(okJson(orderJson)));
 
         OrderResponse response = orderServiceClient.retryInvoice(USER_ID, ORDER_ID);
 
@@ -212,7 +166,7 @@ class OrderServiceClientTest {
     @Test
     @DisplayName("ship: 200 response ships order")
     void ship_Success() {
-        String shippedJson = ORDER_JSON.replace("\"NEW\"", "\"SHIPPED\"");
+        String shippedJson = orderJson.replace("\"NEW\"", "\"SHIPPED\"");
         wireMock.stubFor(post(urlPathEqualTo("/orders/" + ORDER_ID + "/ship"))
                 .willReturn(okJson(shippedJson)));
 

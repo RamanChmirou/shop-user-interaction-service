@@ -16,6 +16,7 @@ import com.kanapa4.shop.userinteraction.dto.ProductType;
 import com.kanapa4.shop.userinteraction.dto.SelectedOptionRequest;
 import com.kanapa4.shop.userinteraction.dto.VatRate;
 import com.kanapa4.shop.userinteraction.exception.DownstreamServiceUnavailableException;
+import com.kanapa4.shop.userinteraction.util.TestFileUtils;
 import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -75,17 +76,10 @@ class ProductServiceClientTest {
 
     private static final UUID PRODUCT_ID = UUID.fromString("11111111-0000-0000-0000-000000000001");
 
-    private static final String PRODUCT_JSON = """
-            {
-              "id": "11111111-0000-0000-0000-000000000001",
-              "name": "Laptop Pro 15",
-              "description": "High performance laptop",
-              "type": "COMPUTER",
-              "price": { "amount": 3999.00, "currency": "PLN", "vatRate": "VAT_23" },
-              "attributes": { "screen": "15.6 inch" },
-              "active": true
-            }
-            """;
+    private final String productJson = TestFileUtils.readJson("stubs/product.json");
+    private final String productsPageJson = TestFileUtils.readJson("stubs/products-page.json");
+    private final String configJson = TestFileUtils.readJson("stubs/product-config.json");
+    private final String quoteJson = TestFileUtils.readJson("stubs/product-quote.json");
 
     @InjectWireMock
     private WireMockServer wireMock;
@@ -101,18 +95,8 @@ class ProductServiceClientTest {
     @Test
     @DisplayName("getAll: 200 response returns paged products")
     void getAll_Success() {
-        String pageJson = """
-                {
-                  "content": [ %s ],
-                  "number": 0,
-                  "size": 20,
-                  "totalElements": 1,
-                  "totalPages": 1
-                }
-                """.formatted(PRODUCT_JSON);
-
         wireMock.stubFor(get(urlPathEqualTo("/products"))
-                .willReturn(okJson(pageJson)));
+                .willReturn(okJson(productsPageJson)));
 
         PageResponse<ProductSummaryDto> response = productServiceClient.getAll(0, 20, "name");
 
@@ -123,18 +107,8 @@ class ProductServiceClientTest {
     @Test
     @DisplayName("getByType: 200 response returns products filtered by type")
     void getByType_Success() {
-        String pageJson = """
-                {
-                  "content": [ %s ],
-                  "number": 0,
-                  "size": 20,
-                  "totalElements": 1,
-                  "totalPages": 1
-                }
-                """.formatted(PRODUCT_JSON);
-
         wireMock.stubFor(get(urlPathEqualTo("/products"))
-                .willReturn(okJson(pageJson)));
+                .willReturn(okJson(productsPageJson)));
 
         PageResponse<ProductSummaryDto> response = productServiceClient.getByType(ProductType.COMPUTER, 0, 20, "name");
 
@@ -145,7 +119,7 @@ class ProductServiceClientTest {
     @DisplayName("getById: 200 response returns product details")
     void getById_Success() {
         wireMock.stubFor(get(urlPathEqualTo("/products/" + PRODUCT_ID))
-                .willReturn(okJson(PRODUCT_JSON)));
+                .willReturn(okJson(productJson)));
 
         ProductDto response = productServiceClient.getById(PRODUCT_ID);
 
@@ -156,15 +130,6 @@ class ProductServiceClientTest {
     @Test
     @DisplayName("getConfiguration: 200 response returns option groups")
     void getConfiguration_Success() {
-        String configJson = """
-                {
-                  "productId": "11111111-0000-0000-0000-000000000001",
-                  "productName": "Laptop Pro 15",
-                  "basePrice": { "amount": 3999.00, "currency": "PLN", "vatRate": "VAT_23" },
-                  "optionGroups": []
-                }
-                """;
-
         wireMock.stubFor(get(urlPathEqualTo("/products/" + PRODUCT_ID + "/configuration"))
                 .willReturn(okJson(configJson)));
 
@@ -177,15 +142,6 @@ class ProductServiceClientTest {
     @Test
     @DisplayName("quote: 200 response returns calculated price quote")
     void quote_Success() {
-        String quoteJson = """
-                {
-                  "productId": "11111111-0000-0000-0000-000000000001",
-                  "productName": "Laptop Pro 15",
-                  "unitPrice": { "amount": 4399.00, "currency": "PLN", "vatRate": "VAT_23" },
-                  "selectedOptions": []
-                }
-                """;
-
         wireMock.stubFor(post(urlPathEqualTo("/products/" + PRODUCT_ID + "/price-quote"))
                 .willReturn(okJson(quoteJson)));
 
@@ -199,7 +155,7 @@ class ProductServiceClientTest {
     @DisplayName("createProduct: 201 response creates product")
     void createProduct_Success() {
         wireMock.stubFor(post(urlPathEqualTo("/products"))
-                .willReturn(aResponse().withStatus(201).withBody(PRODUCT_JSON).withHeader("Content-Type", "application/json")));
+                .willReturn(aResponse().withStatus(201).withBody(productJson).withHeader("Content-Type", "application/json")));
 
         ProductRequest request = new ProductRequest(
                 "Laptop Pro 15",
@@ -220,7 +176,7 @@ class ProductServiceClientTest {
     @DisplayName("updateProduct: 200 response updates product")
     void updateProduct_Success() {
         wireMock.stubFor(put(urlPathEqualTo("/products/" + PRODUCT_ID))
-                .willReturn(okJson(PRODUCT_JSON)));
+                .willReturn(okJson(productJson)));
 
         ProductRequest request = new ProductRequest(
                 "Laptop Pro 15",

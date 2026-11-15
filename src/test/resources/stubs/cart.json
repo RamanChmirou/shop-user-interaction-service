@@ -1,0 +1,20 @@
+{
+  "id": "bbbbbbbb-0000-0000-0000-000000000001",
+  "userId": "aaaaaaaa-0000-0000-0000-000000000001",
+  "status": "ACTIVE",
+  "items": [
+    {
+      "id": "cccccccc-0000-0000-0000-000000000001",
+      "productId": "11111111-0000-0000-0000-000000000001",
+      "productName": "Laptop Pro 15",
+      "unitPrice": { "amount": 3999.00, "currency": "PLN", "vatRate": "VAT_23" },
+      "quantity": 1,
+      "totalPrice": { "amount": 3999.00, "currency": "PLN", "vatRate": "VAT_23" },
+      "selectedOptions": []
+    }
+  ],
+  "itemCount": 1,
+  "totalAmount": 3999.00,
+  "currency": "PLN"
+}
+

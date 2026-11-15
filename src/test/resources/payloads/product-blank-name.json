@@ -1,0 +1,5 @@
+{
+  "name": "",
+  "type": "ELECTRONICS",
+  "price": { "amount": 100.0, "currency": "PLN", "vatRate": "VAT_23" }
+}
