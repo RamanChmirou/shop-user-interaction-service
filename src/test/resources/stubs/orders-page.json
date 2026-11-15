@@ -1,0 +1,17 @@
+{
+  "content": [
+    {
+      "id": "bbbbbbbb-0000-0000-0000-000000000001",
+      "orderNumber": "ORD-2026-0001",
+      "status": "NEW",
+      "grandTotal": 4014.00,
+      "currency": "PLN",
+      "createdAt": "2026-11-01T20:00:00Z"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
+}
+

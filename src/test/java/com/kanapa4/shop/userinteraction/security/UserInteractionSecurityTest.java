@@ -15,6 +15,7 @@ import com.kanapa4.shop.userinteraction.service.CatalogService;
 import com.kanapa4.shop.userinteraction.service.CheckoutService;
 import com.kanapa4.shop.userinteraction.service.UserCartService;
 import com.kanapa4.shop.userinteraction.service.UserOrderService;
+import com.kanapa4.shop.userinteraction.util.TestFileUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,13 +98,7 @@ class UserInteractionSecurityTest {
     @Test
     @DisplayName("POST /api/products (Admin action) with USER role returns 403 Forbidden")
     void createProduct_UserRole_ReturnsForbidden() throws Exception {
-        String json = """
-                {
-                  "name": "New Laptop",
-                  "type": "COMPUTER",
-                  "price": { "amount": 2999.00, "currency": "PLN", "vatRate": "VAT_23" }
-                }
-                """;
+        String json = TestFileUtils.readJson("payloads/product-create-minimal.json");
 
         mockMvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -116,13 +111,7 @@ class UserInteractionSecurityTest {
     @Test
     @DisplayName("POST /api/products (Admin action) with ADMIN role returns 201 Created")
     void createProduct_AdminRole_ReturnsCreated() throws Exception {
-        String json = """
-                {
-                  "name": "New Laptop",
-                  "type": "COMPUTER",
-                  "price": { "amount": 2999.00, "currency": "PLN", "vatRate": "VAT_23" }
-                }
-                """;
+        String json = TestFileUtils.readJson("payloads/product-create-minimal.json");
 
         when(catalogService.createProduct(any(ProductRequest.class)))
                 .thenReturn(new ProductDto(UUID.randomUUID(), "New Laptop", null, ProductType.COMPUTER,

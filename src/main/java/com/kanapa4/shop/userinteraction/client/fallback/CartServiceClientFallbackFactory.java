@@ -11,7 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -61,10 +63,10 @@ public class CartServiceClientFallbackFactory implements FallbackFactory<CartSer
     }
 
     private RuntimeException failure(Throwable cause) {
-        Throwable actual = cause;
-        while (actual.getCause() != null && !(actual instanceof FeignException)) {
-            actual = actual.getCause();
-        }
+        Throwable actual = Stream.iterate(cause, Objects::nonNull, Throwable::getCause)
+                .filter(FeignException.class::isInstance)
+                .findFirst()
+                .orElse(cause);
         if (actual instanceof FeignException feignEx && feignEx.status() >= 400 && feignEx.status() < 500) {
             return feignEx;
         }

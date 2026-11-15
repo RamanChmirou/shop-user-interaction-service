@@ -1,0 +1,5 @@
+{
+  "name": "New Laptop",
+  "type": "COMPUTER",
+  "price": { "amount": 2999.00, "currency": "PLN", "vatRate": "VAT_23" }
+}

@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
+import com.kanapa4.shop.userinteraction.util.TestFileUtils;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
@@ -67,22 +68,7 @@ class UserInteractionApiIntegrationTest {
     @DisplayName("Complete sales process across Screens 1, 2, 3")
     void completeSalesFlow_Success() throws Exception {
         // --- Screen 1: Browse catalog and view products ---
-        String productsResponse = """
-                {
-                  "content": [
-                    {
-                      "id": "11111111-0000-0000-0000-000000000001",
-                      "name": "Laptop Pro 15",
-                      "type": "COMPUTER",
-                      "price": { "amount": 3999.00, "currency": "PLN", "vatRate": "VAT_23" }
-                    }
-                  ],
-                  "number": 0,
-                  "size": 20,
-                  "totalElements": 1,
-                  "totalPages": 1
-                }
-                """;
+        String productsResponse = TestFileUtils.readJson("stubs/products-page.json");
 
         wireMock.stubFor(WireMock.get(WireMock.urlPathEqualTo("/products"))
                 .willReturn(WireMock.okJson(productsResponse)));
@@ -93,27 +79,7 @@ class UserInteractionApiIntegrationTest {
                 .andExpect(jsonPath("$.content[0].price.amount").value(3999.00));
 
         // --- Screen 1: Add product to cart ---
-        String cartResponse = """
-                {
-                  "id": "22222222-0000-0000-0000-000000000001",
-                  "userId": "aaaaaaaa-0000-0000-0000-000000000001",
-                  "status": "ACTIVE",
-                  "items": [
-                    {
-                      "id": "33333333-0000-0000-0000-000000000001",
-                      "productId": "11111111-0000-0000-0000-000000000001",
-                      "productName": "Laptop Pro 15",
-                      "unitPrice": { "amount": 3999.00, "currency": "PLN", "vatRate": "VAT_23" },
-                      "quantity": 1,
-                      "lineTotal": { "amount": 3999.00, "currency": "PLN", "vatRate": "VAT_23" },
-                      "selectedOptions": []
-                    }
-                  ],
-                  "itemCount": 1,
-                  "totalAmount": 3999.00,
-                  "currency": "PLN"
-                }
-                """;
+        String cartResponse = TestFileUtils.readJson("stubs/cart.json");
 
         wireMock.stubFor(WireMock.post(WireMock.urlEqualTo("/carts/" + USER_ID + "/items"))
                 .willReturn(WireMock.aResponse().withStatus(201).withHeader("Content-Type", "application/json").withBody(cartResponse)));
@@ -121,13 +87,7 @@ class UserInteractionApiIntegrationTest {
         wireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/carts/" + USER_ID))
                 .willReturn(WireMock.okJson(cartResponse)));
 
-        String addCartJson = """
-                {
-                  "productId": "11111111-0000-0000-0000-000000000001",
-                  "quantity": 1,
-                  "selectedOptions": []
-                }
-                """;
+        String addCartJson = TestFileUtils.readJson("payloads/add-cart-item.json");
 
         mockMvc.perform(post("/api/cart/items")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -170,21 +130,7 @@ class UserInteractionApiIntegrationTest {
                 .andExpect(jsonPath("$.readyToSubmit").value(true));
 
         // --- Screen 3: Submit Order ---
-        String orderCreatedResponse = """
-                {
-                  "id": "44444444-0000-0000-0000-000000000001",
-                  "orderNumber": "ORD-2026-0001",
-                  "userId": "aaaaaaaa-0000-0000-0000-000000000001",
-                  "status": "NEW",
-                  "deliveryMethod": "COURIER",
-                  "paymentMethod": "CARD",
-                  "itemsTotal": 3999.00,
-                  "deliveryCost": 15.00,
-                  "grandTotal": 4014.00,
-                  "currency": "PLN",
-                  "createdAt": "2026-11-01T12:00:00Z"
-                }
-                """;
+        String orderCreatedResponse = TestFileUtils.readJson("stubs/order-created.json");
 
         wireMock.stubFor(WireMock.post(WireMock.urlEqualTo("/orders/" + USER_ID))
                 .willReturn(WireMock.aResponse().withStatus(201).withHeader("Content-Type", "application/json").withBody(orderCreatedResponse)));

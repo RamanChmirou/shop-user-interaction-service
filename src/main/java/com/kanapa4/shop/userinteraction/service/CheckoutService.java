@@ -23,19 +23,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class CheckoutService {
 
-    private static final BigDecimal COURIER_COST = new BigDecimal("15.00");
-    private static final BigDecimal PARCEL_LOCKER_COST = new BigDecimal("9.99");
-    private static final BigDecimal PICKUP_COST = new BigDecimal("0.00");
     private static final String DEFAULT_CURRENCY = "PLN";
     private static final List<String> ALL_DRAFT_FIELDS = List.of(
             "firstName", "lastName", "email", "deliveryMethod", "paymentMethod", "shippingAddress");
@@ -57,7 +54,7 @@ public class CheckoutService {
         UUID userId = currentUser.id();
         log.info("Saving checkout draft for user={}", userId);
         CheckoutDraft draft = checkoutDraftRepository.findById(userId)
-                .orElseGet(() -> new CheckoutDraft(userId, data));
+                .orElseGet(() -> createNewDraft(userId, data));
         draft.setData(data);
         checkoutDraftRepository.save(draft);
         return draft.getData();
@@ -69,12 +66,7 @@ public class CheckoutService {
         log.info("Generating checkout summary for user={}", userId);
         CartResponse cart = cartServiceClient.getCart(userId);
         CheckoutData data = checkoutDraftRepository.findById(userId).map(CheckoutDraft::getData).orElse(null);
-        BigDecimal deliveryCost = deliveryCostOf(data);
-        BigDecimal grandTotal = cartTotalOf(cart).add(deliveryCost);
-        List<String> missingFields = missingFields(data);
-        boolean readyToSubmit = !isCartEmpty(cart) && missingFields.isEmpty();
-        return new CheckoutSummaryResponse(
-                cart, data, deliveryCost, grandTotal, currencyOf(cart), readyToSubmit, missingFields);
+        return buildSummary(cart, data);
     }
 
     /**
@@ -90,6 +82,19 @@ public class CheckoutService {
         checkoutDraftRepository.deleteById(userId);
         log.info("Order placed successfully with orderNumber={}, draft removed", order.orderNumber());
         return order;
+    }
+
+    private CheckoutDraft createNewDraft(UUID userId, CheckoutData data) {
+        return new CheckoutDraft(userId, data);
+    }
+
+    private CheckoutSummaryResponse buildSummary(CartResponse cart, CheckoutData data) {
+        BigDecimal deliveryCost = deliveryCostOf(data);
+        BigDecimal grandTotal = cartTotalOf(cart).add(deliveryCost);
+        List<String> missingFields = missingFields(data);
+        boolean readyToSubmit = !isCartEmpty(cart) && missingFields.isEmpty();
+        return new CheckoutSummaryResponse(
+                cart, data, deliveryCost, grandTotal, currencyOf(cart), readyToSubmit, missingFields);
     }
 
     private CheckoutData loadCompleteDraft(UUID userId) {
@@ -129,16 +134,8 @@ public class CheckoutService {
     private BigDecimal deliveryCostOf(CheckoutData data) {
         return Optional.ofNullable(data)
                 .map(CheckoutData::deliveryMethod)
-                .map(this::calculateDeliveryCost)
+                .map(DeliveryMethod::getCost)
                 .orElse(BigDecimal.ZERO);
-    }
-
-    private BigDecimal calculateDeliveryCost(DeliveryMethod method) {
-        return switch (method) {
-            case COURIER -> COURIER_COST;
-            case PARCEL_LOCKER -> PARCEL_LOCKER_COST;
-            case PICKUP -> PICKUP_COST;
-        };
     }
 
     private BigDecimal cartTotalOf(CartResponse cart) {
@@ -157,28 +154,23 @@ public class CheckoutService {
         if (data == null) {
             return ALL_DRAFT_FIELDS;
         }
-        List<String> missing = new ArrayList<>();
-        addIfBlank(missing, "firstName", data.firstName());
-        addIfBlank(missing, "lastName", data.lastName());
-        addIfBlank(missing, "email", data.email());
-        addIfNull(missing, "deliveryMethod", data.deliveryMethod());
-        addIfNull(missing, "paymentMethod", data.paymentMethod());
-        if (!isAddressComplete(data.shippingAddress())) {
-            missing.add("shippingAddress");
-        }
-        return missing;
+        return Stream.of(
+                checkField("firstName", data.firstName()),
+                checkField("lastName", data.lastName()),
+                checkField("email", data.email()),
+                checkField("deliveryMethod", data.deliveryMethod()),
+                checkField("paymentMethod", data.paymentMethod()),
+                isAddressComplete(data.shippingAddress()) ? Optional.<String>empty() : Optional.of("shippingAddress")
+        )
+        .flatMap(Optional::stream)
+        .toList();
     }
 
-    private void addIfBlank(List<String> missing, String field, String value) {
-        if (isBlank(value)) {
-            missing.add(field);
+    private Optional<String> checkField(String fieldName, Object value) {
+        if (value == null || (value instanceof String str && str.isBlank())) {
+            return Optional.of(fieldName);
         }
-    }
-
-    private void addIfNull(List<String> missing, String field, Object value) {
-        if (value == null) {
-            missing.add(field);
-        }
+        return Optional.empty();
     }
 
     private boolean isAddressComplete(AddressData address) {

@@ -1,0 +1,14 @@
+{
+  "id": "44444444-0000-0000-0000-000000000001",
+  "orderNumber": "ORD-2026-0001",
+  "userId": "aaaaaaaa-0000-0000-0000-000000000001",
+  "status": "NEW",
+  "deliveryMethod": "COURIER",
+  "paymentMethod": "CARD",
+  "itemsTotal": 3999.00,
+  "deliveryCost": 15.00,
+  "grandTotal": 4014.00,
+  "currency": "PLN",
+  "createdAt": "2026-11-01T12:00:00Z"
+}
+

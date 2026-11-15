@@ -15,6 +15,7 @@ import com.kanapa4.shop.userinteraction.dto.SelectedOptionRequest;
 import com.kanapa4.shop.userinteraction.dto.VatRate;
 import com.kanapa4.shop.userinteraction.exception.GlobalExceptionHandler;
 import com.kanapa4.shop.userinteraction.service.CatalogService;
+import com.kanapa4.shop.userinteraction.util.TestFileUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -184,13 +185,7 @@ class CatalogControllerTest {
     @Test
     @DisplayName("POST /api/products with blank name returns 400 Bad Request")
     void createProduct_BlankName_ReturnsBadRequest() throws Exception {
-        String invalidJson = """
-                {
-                    "name": "",
-                    "type": "ELECTRONICS",
-                    "price": { "amount": 100.0, "currency": "PLN", "vatRate": "VAT_23" }
-                }
-                """;
+        String invalidJson = TestFileUtils.readJson("payloads/product-blank-name.json");
 
         mockMvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)

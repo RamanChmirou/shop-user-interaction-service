@@ -11,6 +11,7 @@ import com.kanapa4.shop.userinteraction.dto.VatRate;
 import com.kanapa4.shop.userinteraction.exception.DownstreamServiceUnavailableException;
 import com.kanapa4.shop.userinteraction.exception.GlobalExceptionHandler;
 import com.kanapa4.shop.userinteraction.service.UserCartService;
+import com.kanapa4.shop.userinteraction.util.TestFileUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,12 +122,7 @@ class CartControllerTest {
     @Test
     @DisplayName("POST /api/cart/items with invalid quantity returns 400 Bad Request")
     void addItem_InvalidQuantity_ReturnsBadRequest() throws Exception {
-        String invalidJson = """
-                {
-                    "productId": "11111111-0000-0000-0000-000000000001",
-                    "quantity": 0
-                }
-                """;
+        String invalidJson = TestFileUtils.readJson("payloads/add-item-invalid-quantity.json");
 
         mockMvc.perform(post("/api/cart/items")
                         .contentType(MediaType.APPLICATION_JSON)

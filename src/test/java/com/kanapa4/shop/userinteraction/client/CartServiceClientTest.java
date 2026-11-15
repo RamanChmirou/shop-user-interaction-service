@@ -9,6 +9,7 @@ import com.kanapa4.shop.userinteraction.dto.RepriceResponse;
 import com.kanapa4.shop.userinteraction.dto.SelectedOptionRequest;
 import com.kanapa4.shop.userinteraction.dto.UpdateQuantityRequest;
 import com.kanapa4.shop.userinteraction.exception.DownstreamServiceUnavailableException;
+import com.kanapa4.shop.userinteraction.util.TestFileUtils;
 import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -71,27 +72,8 @@ class CartServiceClientTest {
     private static final UUID ITEM_ID = UUID.fromString("cccccccc-0000-0000-0000-000000000001");
     private static final UUID PRODUCT_ID = UUID.fromString("11111111-0000-0000-0000-000000000001");
 
-    private static final String CART_JSON = """
-            {
-              "id": "bbbbbbbb-0000-0000-0000-000000000001",
-              "userId": "aaaaaaaa-0000-0000-0000-000000000001",
-              "status": "ACTIVE",
-              "items": [
-                {
-                  "id": "cccccccc-0000-0000-0000-000000000001",
-                  "productId": "11111111-0000-0000-0000-000000000001",
-                  "productName": "Laptop Pro 15",
-                  "unitPrice": { "amount": 3999.00, "currency": "PLN", "vatRate": "VAT_23" },
-                  "quantity": 1,
-                  "totalPrice": { "amount": 3999.00, "currency": "PLN", "vatRate": "VAT_23" },
-                  "selectedOptions": []
-                }
-              ],
-              "itemCount": 1,
-              "totalAmount": 3999.00,
-              "currency": "PLN"
-            }
-            """;
+    private final String cartJson = TestFileUtils.readJson("stubs/cart.json");
+    private final String repriceJson = TestFileUtils.readJson("stubs/cart-reprice.json");
 
     @InjectWireMock
     private WireMockServer wireMock;
@@ -108,7 +90,7 @@ class CartServiceClientTest {
     @DisplayName("getCart: successful 200 response maps into CartResponse")
     void getCart_Success() {
         wireMock.stubFor(get(urlPathEqualTo("/carts/" + USER_ID))
-                .willReturn(okJson(CART_JSON)));
+                .willReturn(okJson(cartJson)));
 
         CartResponse response = cartServiceClient.getCart(USER_ID);
 
@@ -121,7 +103,7 @@ class CartServiceClientTest {
     @DisplayName("addItem: 200 response adds item to user cart")
     void addItem_Success() {
         wireMock.stubFor(post(urlPathEqualTo("/carts/" + USER_ID + "/items"))
-                .willReturn(okJson(CART_JSON)));
+                .willReturn(okJson(cartJson)));
 
         AddCartItemRequest request = new AddCartItemRequest(PRODUCT_ID, 1, List.of(new SelectedOptionRequest("RAM", "RAM_32")));
         CartResponse response = cartServiceClient.addItem(USER_ID, request);
@@ -134,7 +116,7 @@ class CartServiceClientTest {
     @DisplayName("updateQuantity: 200 response updates cart item quantity")
     void updateQuantity_Success() {
         wireMock.stubFor(patch(urlPathEqualTo("/carts/" + USER_ID + "/items/" + ITEM_ID))
-                .willReturn(okJson(CART_JSON)));
+                .willReturn(okJson(cartJson)));
 
         CartResponse response = cartServiceClient.updateQuantity(USER_ID, ITEM_ID, new UpdateQuantityRequest(2));
 
@@ -166,13 +148,6 @@ class CartServiceClientTest {
     @Test
     @DisplayName("reprice: 200 response returns reprice details")
     void reprice_Success() {
-        String repriceJson = """
-                {
-                  "cart": %s,
-                  "priceChanges": []
-                }
-                """.formatted(CART_JSON);
-
         wireMock.stubFor(post(urlPathEqualTo("/carts/" + USER_ID + "/reprice"))
                 .willReturn(okJson(repriceJson)));
 
@@ -213,7 +188,7 @@ class CartServiceClientTest {
 
         wireMock.stubFor(get(urlPathEqualTo("/carts/" + USER_ID)).inScenario("retry-test")
                 .whenScenarioStateIs("recovered")
-                .willReturn(okJson(CART_JSON)));
+                .willReturn(okJson(cartJson)));
 
         CartResponse response = cartServiceClient.getCart(USER_ID);
 
